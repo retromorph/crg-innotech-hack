@@ -1,3 +1,6 @@
+# Jetbrains
+.idea
+
 # Distribution / packaging
 .Python
 venv/
