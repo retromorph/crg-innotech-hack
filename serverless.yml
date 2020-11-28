@@ -26,8 +26,9 @@ provider:
   profile: ServerlessUser
 
 custom:
-  UrlsTableName: crg-innotech-dataset-urls-table
-  ImagesBucketName: crg-innotech-dataset-images-bucket
+  IndexTableName: crg-innotech-index-table
+  IndexBucketName: crg-innotech-index-encoding-bucket
+  ReportTableName: crg-innotech-report-table
 
 # you can overwrite defaults here
 #  stage: dev
@@ -108,30 +109,58 @@ functions:
 # you can add CloudFormation resource templates here
 resources:
   Resources:
-    ImagesBucket:
+    IndexBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:custom.UrlsTableName}
+        BucketName: ${self:custom.IndexBucketName}
 
-    UrlsTable:
+    IndexTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.UrlsTableName}
+        TableName: ${self:custom.IndexTableName}
         AttributeDefinitions:
-          - AttributeName: url
+          - AttributeName: uid
             AttributeType: S
           - AttributeName: name
             AttributeType: S
+          - AttributeName: nick
+            AttributeType: S
+          - AttributeName: encoding_link
+            AttributeType: S3Link
+          - AttributeName: vk_link
+            AttributeType: S
+          - AttributeName: instagram_link
+            AttributeType: S
+          - AttributeName: odnoklassniki_link
+            AttributeType: S
+          - AttributeName: odnoklassniki_link
+            AttributeType: S
+          - AttributeName: facebook_link
+            AttributeType: S
+          - AttributeName: linkedin_link
+            AttributeType: S
         KeySchema:
-          - AttributeName: url
+          - AttributeName: uid
             KeyType: HASH
         ProvisionedThroughput:
-          ReadCapacityUnits: 5
-          WriteCapacityUnits: 5
-        StreamSpecification:
-          StreamViewType: NEW_AND_OLD_IMAGES
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        BillingMode: PAY_PER_REQUEST
 
-
+    ReportTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.ReportTableName}
+        AttributeDefinitions:
+          - AttributeName: uid
+          AttributeType: S
+        KeySchema:
+          - AttributeName: uid
+          KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        BillingMode: PAY_PER_REQUEST
 #    NewResource:
 #      Type: AWS::S3::Bucket
 #      Properties:
