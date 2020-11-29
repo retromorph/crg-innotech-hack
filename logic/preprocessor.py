@@ -1,9 +1,7 @@
 import dlib
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image
 from math import *
-
-from matplotlib import pyplot as plt
 
 
 def normalize(img):
@@ -83,19 +81,19 @@ def crop(img, face):
 
 
 def preprocess(img):
-    # try:
-    img = normalize(img)
-    img, face, face_parts = detect(img)
+    try:
+        img = normalize(img)
+        img, face, face_parts = detect(img)
 
-    rotation_z = abs(rotation_z_coefficient(face, face_parts))
+        rotation_z = abs(rotation_z_coefficient(face, face_parts))
 
-    if rotation_z < (0.7 / 12.5):
-        raise BaseException
-    img, face, face_parts = detect(align(img, face, face_parts))
+        if rotation_z < (0.7 / 12.5):
+            raise BaseException
+        img, face, face_parts = detect(align(img, face, face_parts))
 
-    img = crop(img, face)
+        img = crop(img, face)
 
-    return Image.fromarray(img).resize((256, 256), Image.ANTIALIAS), rotation_z
-#
-# except BaseException:
-#     return None
+        return Image.fromarray(img).resize((256, 256), Image.ANTIALIAS), rotation_z
+
+    except BaseException:
+        return None

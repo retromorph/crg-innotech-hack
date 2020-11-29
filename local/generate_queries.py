@@ -2,7 +2,7 @@ import asyncio
 import aiohttp
 from collections import deque
 
-token = open('../resources/token.key', 'r').readline()
+token = open('../resources/vk_token1.key', 'r').readline()
 query = deque()
 query_ready = deque()
 

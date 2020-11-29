@@ -14,7 +14,7 @@ provider:
 
 custom:
   IndexTableName: crg-innotech-index-table
-  IndexBucketName: crg-innotech-index-encoding-bucket
+  ProfileTableName: crg-innotech-profile-table
   ReportTableName: crg-innotech-report-table
 
 # you can overwrite defaults here
@@ -96,11 +96,6 @@ functions:
 # you can add CloudFormation resource templates here
 resources:
   Resources:
-    IndexBucket:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: ${self:custom.IndexBucketName}
-
     IndexTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -114,8 +109,8 @@ resources:
             AttributeType: S
           - AttributeName: nick
             AttributeType: S
-          - AttributeName: encoding_link
-            AttributeType: S3Link
+          - AttributeName: face_encoding
+            AttributeType: S
           - AttributeName: vk_link
             AttributeType: S
           - AttributeName: instagram_link
@@ -135,6 +130,18 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         BillingMode: PAY_PER_REQUEST
+
+    ProfileTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.ProfileTableName}
+        AttributeDefinitions:
+          - AttributeName: uid
+          AttributeType: S
+          - AttributeName: index_backlink
+          AttributeType: S
+          - AttributeName: link
+          AttributeType: S0
 
     ReportTable:
       Type: AWS::DynamoDB::Table
