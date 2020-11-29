@@ -2,20 +2,19 @@ import torch
 import numpy as np
 from torchvision import transforms
 
-
 transform = transforms.Compose([
     transforms.Resize(224),
     transforms.ToTensor()
 ])
 
-
 DEVICE = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 LABELS = ['anime', 'collecting', 'comics', 'computer games', 'dancing',
-       'drawing', 'embroidery', 'fine arts', 'fitness', 'food',
-       'gardening', 'man next to car', 'movies', 'pets', 'photography',
-       'role playing', 'shopping', 'sport', 'tourism']
+          'drawing', 'embroidery', 'fine arts', 'fitness', 'food',
+          'gardening', 'man next to car', 'movies', 'pets', 'photography',
+          'role playing', 'shopping', 'sport', 'tourism']
 
 model = torch.load('ResNet18.innotechImageInterests.model')
+
 
 def img_batch_handler(batch: list, device=DEVICE):
     inputs = torch.from_numpy(np.array(list(map(lambda img: transform(img).numpy(), batch))))

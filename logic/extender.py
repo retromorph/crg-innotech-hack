@@ -31,6 +31,8 @@ def preprocess_vk_images(images):
             for size in photos['sizes']:
                 if size['type'] == 'x':
                     preprocessed = preprocess(load_image_from_url(size['url']))[0]
+                    # plt.imshow(preprocessed)
+                    # plt.show()
                     result.append(np.array(preprocessed))
         except BaseException:
             i -= 1
@@ -42,7 +44,6 @@ async def candidates_vk(name):
     session = aiohttp.ClientSession()
 
     fields_validate = 'photo_id'
-    fields = 'photo_id, sex, bdate, city, country, home_town, photo_400_orig, lists, domain, has_mobile, contacts, site, education, universities, schools, status, followers_count, common_count, occupation, nickname, relatives, relation, personal, connections, exports, wall_comments, activities, interests, music, books, games, about, quotes, timezone, screen_name, maiden_name, crop_photo, career, military'
 
     async with session.get(
             f'https://api.vk.com/method/users.search?q={name}&has_photo=1&field={fields}&access_token={access_token}&v=5.126') as response:
@@ -92,34 +93,57 @@ async def index_vk(url):
                 data = await response.json()
                 faces.extend(preprocess_vk_images(data['response']['items']))
 
-        faces.append(np.array(Image.open("../resources/face2.jpg")))
-
-        faces = list(map(lambda x: encode(x), faces))
-
-        outlier_detection = DBSCAN(min_samples=2, eps=0.5)
-        clusters = outlier_detection.fit_predict(faces)
+        # faces.append(np.array(Image.open("../resources/face2.jpg")))
 
         delta = 0
-        for i in range(len(clusters)):
-            if clusters[i] == -1:
+        for i in range(len(faces)):
+            try:
+                faces[i - delta] = encode(faces[i])
+            except BaseException:
                 del faces[i - delta]
                 delta += 1
+
+        if len(faces) > 1:
+            outlier_detection = DBSCAN(min_samples=2, eps=0.6)
+            clusters = outlier_detection.fit_predict(faces)
+
+            delta = 0
+            for i in range(len(clusters)):
+                if clusters[i] == -1:
+                    del faces[i - delta]
+                    delta += 1
 
     await session.close()
     return uid, faces[0]
 
 
+async def process_images(uid):
+    pass
+
+
 async def user_get_info(uid):
     session = aiohttp.ClientSession()
 
+    fields = 'photo_id, sex, bdate, city, country, home_town, photo_400_orig, lists, domain, has_mobile, contacts, site, education, universities, schools, status, followers_count, common_count, occupation, nickname, relatives, relation, personal, connections, exports, wall_comments, activities, interests, music, books, games, about, quotes, timezone, screen_name, maiden_name, crop_photo, career, military'
+
     async with session.get(
-            f'https://api.vk.com/method/account.getProfileInfo?user_id={uid}album_id=profile&access_token={access_token}&sort=0&photo_sizes=1&type=x&count=10&v=5.126') as response:
-        data = (await response.json())['response']
+            f'https://api.vk.com/method/users.get?user_id={uid}&album_id=profile&fields={fields}&access_token={access_token}&sort=0&photo_sizes=1&type=x&count=10&v=5.126') as response:
+        data = (await response.json())['response'][0]
 
     await session.close()
-    return data['home_town'] if data['home_town'] != '' else None, \
-           data['status'] if data['status'] != '' else None, \
-           data['bdate'] if data['bdate'] != '' else None, data['city']['title'] if data['city'] else None,
+    return data['home_town'] if 'home_town' in data and data['home_town'] != '' else None, \
+           data['status'] if 'status' in data and data['status'] != '' else None, \
+           data['bdate'] if 'bdate' in data and data['bdate'] != '' else None, \
+           data['city']['title'] if 'city' in data and 'title' in data['city'] else None, \
+           data['country']['title'] if 'country' in data and 'title' in data['country'] else None, \
+           ('Мужчина' if data['sex'] == 2 else 'Женщина') if 'sex' in data else 'Не указано', \
+           data['interests'] if 'interests' in data and data['interests'] != '' else None, \
+           data['books'] if 'books' in data and data['books'] != '' else None, \
+           data['quotes'] if 'quotes' in data and data['quotes'] != '' else None, \
+           data['about'] if 'about' in data and data['about'] != '' else None, \
+           data['followers_count'] if 'followers_count' in data and data['followers_count'] != '' else None, \
+           data['occupation'] if 'occupation' in data else None, \
+           data['career'] if 'career' in data else None,
 
 
 async def authenticate_vk(face_encoding, name):
@@ -142,7 +166,10 @@ async def authenticate_vk(face_encoding, name):
         true_sum = 0
         amount = 0
         for encoding in encodes:
-            true_sum += int(compare_encode_w_encode(face_encoding, encoding)[0])
+            try:
+                true_sum += int(compare_encode_w_encode(face_encoding, encoding)[0])
+            except BaseException:
+                pass
             amount += 1
         try:
             candidates_rate.append(true_sum / amount)
@@ -151,12 +178,3 @@ async def authenticate_vk(face_encoding, name):
 
     return candidates[candidates_rate.index(max(candidates_rate))], candidates_faces[
         candidates_rate.index(max(candidates_rate))]
-
-
-# asyncio.run(authenticate(encode(Image.open("../resources/face0.jpg")), "Никита Мусалов"))
-async def tmp():
-    user_id, face_encoding = await index_vk("https://vk.com/mobynick_kaktys")
-    print(await user_get_info(user_id))
-
-
-asyncio.run(tmp())
