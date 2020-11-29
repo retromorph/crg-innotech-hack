@@ -1,0 +1,5 @@
+dlib==19.21.0
+llvmlite==0.34.0
+numba==0.51.2
+numpy==1.19.4
+Pillow==8.0.1
